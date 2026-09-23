@@ -6,18 +6,32 @@ const yError = document.getElementById('y-error');
 const rError = document.getElementById('r-error');
 const resultsBody = document.getElementById('result-body');
 
-
-
+const SCALE = 50;                      
+const CENTER_X = canvas.width / 2;
+const CENTER_Y = canvas.height / 2;
+const R_COLORS = {
+    1:   'rgba(0, 150, 255, 0.61)',    
+    1.5: 'rgba(7, 255, 119, 0.61)',    
+    2:   'rgba(255, 35, 35, 0.61)',    
+    2.5: 'rgba(161, 39, 255, 0.61)',   
+    3:   'rgba(255, 208, 0, 0.61)'     
+};
 form.addEventListener('submit', function(event) {
     event.preventDefault();
-    console.log("Форма отправлена!!");
 
     const x = parseFloat(document.getElementById('x-select').value);
 
     const y = parseFloat(yInput.value);
 
     const rCheckboxes = document.querySelectorAll('input[name="r"]:checked');
-    console.log('Выбрано радиусов:', rCheckboxes.length);
+
+    const rValues = Array.from(rCheckboxes).map(function(checkbox) {
+        return parseFloat(checkbox.value);
+    });
+
+    rValues.sort(function(a, b) {
+        return b - a;
+    });
 
     let isValid = true;
 
@@ -28,7 +42,7 @@ form.addEventListener('submit', function(event) {
         yError.style.display = 'none';
     }
 
-    if (rCheckboxes.length === 0) {
+    if (rValues.length === 0) {
         rError.style.display = 'block';
         isValid = false;
     } else {
@@ -39,20 +53,70 @@ form.addEventListener('submit', function(event) {
         return;
     }
 
-    rCheckboxes.forEach(function(checkbox) {
-        const r = parseFloat(checkbox.value);
-        console.log('Проверяем R =', r);
+    drawGraph(x, y, rValues);
+
+    rValues.forEach(function(r) {
         const isHit = checkHit(x, y, r);
-        console.log(`При r = ${r}:${isHit}`);
+        addResultToTable(x, y, r, isHit);
     });
 
 });
 
-const SCALE = 50;                      
-const CENTER_X = canvas.width / 2;
-const CENTER_Y = canvas.height / 2;
+function drawPoint(x, y , isHit){
+    const px = CENTER_X + x * SCALE;
+    const py = CENTER_Y - y * SCALE;
 
-drawAxes();
+    ctx.beginPath();
+    ctx.arc(px, py, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = isHit ? 'green' : 'red'; 
+    ctx.fill();
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = '#000000'
+}
+
+function drawGraph(x, y, rValues){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawAxes();
+    
+    rValues.forEach(function(r) {
+        const color = R_COLORS[r];
+        drawArea(r, color);
+    });
+
+    let anyHit = false;
+    rValues.forEach(function(r) {
+        if (checkHit(x, y, r)) {
+            anyHit = true;
+        }
+    });
+
+    drawPoint(x, y, anyHit);
+}
+
+function addResultToTable(x, y, r, isHit){
+    const row = document.createElement('tr');
+
+    const hitText = isHit ? 'Попадание' : 'Промах';
+    const hitColor = isHit ? 'green' : 'red';
+
+    const time = Date.now();
+    const dateStr = new Date(time).toLocaleString('ru-RU');
+
+
+    row.innerHTML = `
+        <td>${x}</td>
+        <td>${y}</td>
+        <td>${r}</td>
+        <td style="color: ${hitColor}; font-weight: bold;">${hitText}</td>
+        <td>${dateStr}</td>
+    `;
+
+    resultsBody.prepend(row);
+
+
+}
 
 function drawAxes(){
     ctx.beginPath();
@@ -67,6 +131,7 @@ function drawAxes(){
 
     ctx.stroke();
 
+    ctx.strokeStyle = '#000000';
     ctx.beginPath();
     ctx.moveTo(canvas.width - 10, CENTER_Y - 5);
     ctx.lineTo(canvas.width, CENTER_Y);
@@ -106,7 +171,7 @@ function drawArea(r, color){
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.moveTo(toPxX(0), toPxY(0)); // Центр
+    ctx.moveTo(toPxX(0), toPxY(0));
     ctx.arc(toPxX(0), toPxY(0), halfR, Math.PI / 2, Math.PI, false);
     ctx.closePath();
     ctx.fill();
@@ -119,8 +184,15 @@ function drawArea(r, color){
     ctx.closePath();
     ctx.fill();
     ctx.stroke()
+}
 
-
+function getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
 }
 
 function checkHit(x, y, r){
