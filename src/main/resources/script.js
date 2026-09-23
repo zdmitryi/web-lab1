@@ -16,6 +16,10 @@ const R_COLORS = {
     2.5: 'rgba(161, 39, 255, 0.61)',   
     3:   'rgba(255, 208, 0, 0.61)'     
 };
+
+loadResultsFromStorage();
+drawAxes();
+
 form.addEventListener('submit', function(event) {
     event.preventDefault();
 
@@ -32,6 +36,8 @@ form.addEventListener('submit', function(event) {
     rValues.sort(function(a, b) {
         return b - a;
     });
+
+    const time = Date.now();
 
     let isValid = true;
 
@@ -57,10 +63,19 @@ form.addEventListener('submit', function(event) {
 
     rValues.forEach(function(r) {
         const isHit = checkHit(x, y, r);
-        addResultToTable(x, y, r, isHit);
+        addResultToTable(x, y, r, isHit, time);
+        saveResult(x, y, r, isHit);
     });
 
 });
+
+function loadResultsFromStorage() {
+    const results = JSON.parse(localStorage.getItem('labResults') || '[]');
+
+    results.forEach(function(result) {
+        addResultToTable(result.x, result.y, result.r, result.hit, result.time);
+    });
+}
 
 function drawPoint(x, y , isHit){
     const px = CENTER_X + x * SCALE;
@@ -95,13 +110,12 @@ function drawGraph(x, y, rValues){
     drawPoint(x, y, anyHit);
 }
 
-function addResultToTable(x, y, r, isHit){
+function addResultToTable(x, y, r, isHit, time){
     const row = document.createElement('tr');
 
     const hitText = isHit ? 'Попадание' : 'Промах';
     const hitColor = isHit ? 'green' : 'red';
 
-    const time = Date.now();
     const dateStr = new Date(time).toLocaleString('ru-RU');
 
 
@@ -186,15 +200,6 @@ function drawArea(r, color){
     ctx.stroke()
 }
 
-function getRandomColor() {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-}
-
 function checkHit(x, y, r){
 
     const isInSquare = (x >= -r && x <= 0 && y >= 0 && y <= r);
@@ -204,4 +209,18 @@ function checkHit(x, y, r){
     const isInCircle = (x >= -r/2 && x <= 0 && y >= -r/2 && y <= 0 && (x*x + y*y) <= (r/2)*(r/2));
 
     return isInSquare || isInTriangle || isInCircle;
+}
+
+function saveResult(x, y, r, isHit){
+    const results = JSON.parse(localStorage.getItem('labResults') || '[]');
+    
+    results.push({
+        x: x,
+        y: y,
+        r: r,
+        hit: isHit,
+        time: Date.now()
+    });
+
+    localStorage.setItem('labResults', JSON.stringify(results));
 }

@@ -41,8 +41,10 @@ body {
     text-align: center;
 }
 
+
+
 .result-table th {
-    background-color: #f2f2f2;
+    background-color: #f2f2f2;  
 }
 
 .result-table tbody tr:nth-child(even) {
@@ -128,6 +130,12 @@ select:focus {
     border-color: #3498db;
     outline: none;
     box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+.result-table-container {
+    max-height: 400px;       
+    overflow-y: auto;        
+    border-radius: 8px;      
 }
 
 .main-header::after {
