@@ -1,3 +1,5 @@
+'use strict';
+
 const canvas = document.getElementById('graph-canvas');
 const ctx = canvas.getContext('2d');
 const form = document.getElementById('coordinate-form');
@@ -17,31 +19,25 @@ const R_COLORS = {
     3:   'rgba(255, 208, 0, 0.61)'     
 };
 
-loadResultsFromStorage();
-drawAxes();
-
 form.addEventListener('submit', function(event) {
     event.preventDefault();
 
     const x = parseFloat(document.getElementById('x-select').value);
 
-    const y = parseFloat(yInput.value);
+    const yStr = yInput.value.replace(',', '.');
+    const y = parseFloat(yStr);
 
     const rCheckboxes = document.querySelectorAll('input[name="r"]:checked');
 
-    const rValues = Array.from(rCheckboxes).map(function(checkbox) {
-        return parseFloat(checkbox.value);
-    });
+    const rValues = Array.from(rCheckboxes).map((checkbox) => parseFloat(checkbox.value));
 
-    rValues.sort(function(a, b) {
-        return b - a;
-    });
+    rValues.sort((a, b) => b - a);
 
     const time = Date.now();
 
     let isValid = true;
 
-    if (isNaN(y) || y < -3 || y > 3){
+    if (Number.isNaN(y) || y < -3 || y > 3){
         yError.style.display = 'block';
         isValid = false;
     } else {
@@ -61,10 +57,10 @@ form.addEventListener('submit', function(event) {
 
     drawGraph(x, y, rValues);
 
-    rValues.forEach(function(r) {
+    rValues.forEach((r) => {
         const isHit = checkHit(x, y, r);
         addResultToTable(x, y, r, isHit, time);
-        saveResult(x, y, r, isHit);
+        saveResult(x, y, r, isHit, time);
     });
 
 });
@@ -77,7 +73,7 @@ function loadResultsFromStorage() {
     });
 }
 
-function drawPoint(x, y , isHit){
+function drawPoint(x, y, isHit){
     const px = CENTER_X + x * SCALE;
     const py = CENTER_Y - y * SCALE;
 
@@ -88,7 +84,7 @@ function drawPoint(x, y , isHit){
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 1;
     ctx.stroke();
-    ctx.fillStyle = '#000000'
+    ctx.fillStyle = '#000000';
 }
 
 function drawGraph(x, y, rValues){
@@ -118,7 +114,6 @@ function addResultToTable(x, y, r, isHit, time){
 
     const dateStr = new Date(time).toLocaleString('ru-RU');
 
-
     row.innerHTML = `
         <td>${x}</td>
         <td>${y}</td>
@@ -128,8 +123,6 @@ function addResultToTable(x, y, r, isHit, time){
     `;
 
     resultsBody.prepend(row);
-
-
 }
 
 function drawAxes(){
@@ -197,7 +190,7 @@ function drawArea(r, color){
     ctx.lineTo(toPxX(r), toPxY(0));
     ctx.closePath();
     ctx.fill();
-    ctx.stroke()
+    ctx.stroke();
 }
 
 function checkHit(x, y, r){
@@ -211,7 +204,7 @@ function checkHit(x, y, r){
     return isInSquare || isInTriangle || isInCircle;
 }
 
-function saveResult(x, y, r, isHit){
+function saveResult(x, y, r, isHit, time){
     const results = JSON.parse(localStorage.getItem('labResults') || '[]');
     
     results.push({
@@ -219,8 +212,11 @@ function saveResult(x, y, r, isHit){
         y: y,
         r: r,
         hit: isHit,
-        time: Date.now()
+        time: time
     });
 
     localStorage.setItem('labResults', JSON.stringify(results));
 }
+
+loadResultsFromStorage();
+drawAxes();
