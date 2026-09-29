@@ -27,11 +27,11 @@ body {
 
 .result-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate; 
+    border-spacing: 0;
     background-color: #ffffff;
     border-radius: 8px;
     margin-top: 20px;
-    overflow: hidden;
 }
 
 .result-table th,
@@ -42,11 +42,14 @@ body {
 }
 
 .result-table th {
-    background-color: #f2f2f2;  
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #e6e7e7;  
 }
 
 .result-table tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
+    background-color: #e6e7e7;
 }
 
 .form-group {
